@@ -35,7 +35,10 @@ object Main {
    *
    * when a > b, return 0
    */
-  def sum(a: Long, b: Long): Long = ???
+  def sum(a: Long, b: Long): Long = {
+    if( a > b ) 0
+    else (b-a+1)*(a+b)/2
+  }
 
 
   /**
@@ -44,10 +47,19 @@ object Main {
    * Calculate f(a, f(a + 1, f(a + 2, ... f(b - 1, b))))  `(0 <= a, b <= 10^6)`
    *
    * when a >= b, return 0
-   *
+   *          =-0
    * We guarantee that any (f, a, b) in the test set will not raise integer overflow.
    */
-  def fold(f: (Long, Long) => Long, a: Long, b: Long): Long = ???
+  def fold(f: (Long, Long) => Long, a: Long, b: Long): Long = {
+    // Tail recursion function
+    @tailrec
+    def fold_once(b: Long, result: Long): Long = {
+      if(b == a) f(a, result)
+      else fold_once(b-1, f(b-1, result))
+    }
+    if(a >= b) 0
+    else fold_once(b-1,b)
+  }
 
   /**
    * Exercise 2: Binomial Coefficient
@@ -62,7 +74,32 @@ object Main {
    * Hint: Find an appropriate formula from the above link.
    * Hint 2: GCD
    **/
-  def coeff(n: Long, k: Long): Long = ???
+  def coeff(n: Long, k: Long): Long = {
+    @tailrec
+    def gcd(numerator: Long, denominator: Long): Long = {
+      if (denominator == 0) numerator else gcd(denominator, numerator % denominator)
+    }
+    @tailrec
+    def multiplyOnlyDenominator(y: Long, numerator: Long, denominator: Long): Long = {
+      if(y == 0) numerator/denominator
+      else multiplyOnlyDenominator(y-1, numerator/gcd(numerator,denominator), denominator*y/gcd(numerator,denominator))
+    }
+    def multiplyOnlyNumerator(x: Long, numerator: Long, denominator: Long): Long = {
+      if(x == k) numerator/denominator
+      else multiplyOnlyDenominator(x-1, numerator*x/gcd(numerator,denominator), denominator/gcd(numerator,denominator))
+    }
+    @tailrec
+    def multiplyBoth(x: Long, y: Long, numerator: Long, denominator: Long): Long ={
+      if(x == k) multiplyOnlyDenominator(y, numerator, denominator)
+      else if (k == 0) multiplyOnlyNumerator(x, numerator, denominator)
+      else multiplyBoth(x-1, y-1, numerator*x/gcd(numerator,denominator), denominator*y/gcd(numerator,denominator))
+    }
+
+    // Implementation
+    if( k > n || n > 64) 0 // Error!
+    else if(n == k) 1 // Trivial case
+    else multiplyBoth(n, k, 1, 1)
+  }
 
   /**
    * Exercise 3: Termination checker
@@ -80,5 +117,13 @@ object Main {
    * We guarantee that every input in the test set will always
    *   terminate the checker if your checker is correct and efficient.
    **/
-  def terminate(pred: Long => Boolean, f: Long => Long, init: Long): Long = ???
+  def terminate(pred: Long => Boolean, f: Long => Long, init: Long): Long = {
+
+    @tailrec
+    def runAndCheck(checker: Long, result: Long): Long ={
+      if(pred(f(result))) checker
+      else runAndCheck(checker + 1, f(result))
+    }
+    runAndCheck(1, init)
+  }
 }
