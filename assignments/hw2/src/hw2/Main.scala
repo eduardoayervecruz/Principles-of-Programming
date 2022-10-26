@@ -1,7 +1,9 @@
 package hw2
-import hw2.Data._
+import hw2.Data.{B0, BMTree, _}
+
 import scala.annotation.tailrec
 import scala.util.control.TailCalls._
+// import scala.collection.*
 
 object Main {
   /**
@@ -62,7 +64,11 @@ object Main {
       /**
        * WRITE YOUR ANSWER
        */
-      type CommonTy = ???
+      type CommonTy = {
+        def apply: {val func: Func1}
+        def function1: {val func: Func3; val a: A}
+        val a: A
+      }
     }
   }
 
@@ -89,13 +95,68 @@ object Main {
    * Addition (a + b)
    * e.g.) add(B0(B1(BHead)), B0(BHead)) == B0(B0(B0(BHead))) // 6 + 2 = 8
    */
-  def add(a: BNum, b: BNum): BNum = ???
+  // for the problem 2
+//  sealed trait BNum
+//  case object BHead extends BNum
+//  case class B0(next: BNum) extends BNum
+//  case class B1(next: BNum) extends BNum
+//  object BHead{
+//    = 1
+//  }
+
+  def add(a: BNum, b: BNum): BNum = {
+    def addCarry(res: BNum): BNum = {
+      res match {
+        case BHead => B0(BHead)
+        case B0(next) => B1(next)
+        case B1(next) => B0(addCarry(next))
+      }
+    }
+
+    (a, b) match{
+      // BHead
+      case (BHead, BHead) => B0(BHead) // 1 + 1
+      case (BHead, B0(BHead)) => addCarry(b) //
+      case (B0(BHead), BHead) => addCarry(a)
+      case (BHead, B1(BHead)) => addCarry(b) //
+      case (B1(BHead), BHead) => addCarry(a) //
+
+      // Recursive operations
+      case (B0(aNext), B0(bNext)) => B0(add(aNext, bNext))
+      case (B1(aNext), B0(bNext)) => B1(add(aNext, bNext))
+      case (B0(aNext), B1(bNext)) => B1(add(aNext, bNext))
+      case (B1(aNext), B1(bNext)) => B0(add(addCarry(aNext), bNext))
+    }
+  }
 
   /**
    * Multiplication (a * b)
    * e.g.) mul(B0(B1(BHead)), B0(BHead)) == B0(B0(B1(BHead))) // 6 * 2 = 12
    */
-  def mul(a: BNum, b: BNum): BNum = ???
+  def find_value(x: BNum): Int = {
+    x match {
+      case BHead => 1
+      case B0(some) => 0 + 2 * (find_value(some))
+      case B1(some) => 1 + 2 * (find_value(some))
+    }
+  }
+  def mul(a: BNum, b: BNum): BNum = {
+    val comp = compare(a,b)
+    def sumNtimes(times: Int, res: BNum): BNum ={
+      if(times == 0) res
+      else
+        if(comp == 1) sumNtimes(times - 1, add(res, a))
+        else sumNtimes(times - 1, add(res, b))
+    }
+
+    if(comp == 1){
+      val b_value = find_value(b)
+      sumNtimes(b_value - 1, a)
+    }else{
+      val a_value = find_value(a)
+      sumNtimes(a_value - 1, b)
+    }
+  }
 
   /**
    * Comparison (a > b)
@@ -106,7 +167,14 @@ object Main {
    * | 0  (a == b)
    * | -1 (a < b)
    */
-  def compare(a: BNum, b: BNum): Int = ???
+  def compare(a: BNum, b: BNum): Int = {
+    val a_val = find_value(a)
+    val b_val = find_value(b)
+
+    if(a_val > b_val) 1
+    else if (a_val == b_val)0
+    else -1
+  }
 
   /**
    * Problem 3: Binomial Heap (5 points each)
@@ -127,7 +195,23 @@ object Main {
    * cf) We can use type restriction on T that T is comparable.
    *     That feature will be presented on the latter classes.
    **/
-  def merge[T](left: BMHeap[T], right: BMHeap[T], compare: (T, T) => Int): BMHeap[T] = ???
+//  case class BMTree[T](value: T, order: Int, children: List[BMTree[T]])
+//
+//  case class BMHeap[T](trees: List[BMTree[T]])
+//    def merge_binary_tree[T <: BNum](bt1: BMTree[T], bt2: BMTree[T]): BMTree[BNum] ={
+//      // Greater
+//      if(compare(bt1.value, bt2.value) >= 0){
+//        val new_tree: BMTree[BNum] = new BMTree[BNum](bt1.value, bt1.order, bt2 :: bt1.children)
+//        new_tree
+//      }else{
+//        val new_tree: BMTree[BNum] = new BMTree[BNum](bt2.value, bt2.order, bt1 :: bt2.children)
+//        new_tree
+//      }
+//    }
+//  def merge[T <: BNum](left: BMHeap[T], right: BMHeap[T], compare: (T, T) => Int): BMHeap[T] = {
+//
+//    if(left.trees.)
+//  }
 
   def insert[T](heap: BMHeap[T], value: T, compare: (T, T) => Int): BMHeap[T] = ???
 
